@@ -1,113 +1,98 @@
-import React, { useState, useEffect } from 'react'
-import BackEnd from '../BackEnd.jsx'
-const { Sequelize, DataTypes } = require('sequelize')
-
-const Keyword = require('../DB/models/keyword')
-const sequelize = new Sequelize({ dialect: 'sqlite', storage: '../../Keywords.db' })
-const keywords = Keyword(sequelize, DataTypes)
-
-function RegForm({
-  initialValues,
-  validate
-}) {
-  const [errors, setErrors] = useState({})
-  const [values, setValues] = useState(initialValues)
-
-  useEffect(() => {
-    validateValues(values)
-  }, [values])
-
-  function handleChange(e) {
-    const fieldName = e.target.getAttribute('name')
-    const value = e.target.value
-    setValues({
-      ...values,
-      [fieldName]: value,
-    })
-  }
-
-  function validateValues(values) {
-    setErrors(validate(values))
-  }
+import React, { Component } from "react"
+import Service from "../services/service"
 
 
-  return {
-    values,
-    errors,
-    setErrors,
-    handleChange
-  }
-}
 
-function App() {
-  const forma = RegForm({
-    initialValues: {
-      keyword: ''
-    },
+export default class CadReq extends Component {
+  constructor(props) {
+    super(props);
+    this.onChangeKeyword = this.onChangeKeyword.bind(this);
+    this.saveReq = this.saveReq.bind(this);
+    this.newReq = this.newReq.bind(this);
 
-    validate: function (values) {
-      const errors = {};
-
-      if(values.keyword.length < 1) {
-        errors.keyword = 'Por favor, escrever uma requisisao'
-      }
     
-      return errors
+
+    this.state = {
+        keyword: "",
+        id: null,
+
+        submitted: false
+    };
+  }
+
+  onChangeKeyword(e) {
+    this.setState({
+      keyword: e.target.value
+    });
+  }
+
+  saveReq() {
+    const data = {
+      keyword: this.state.keyword,
+      id: this.state.id
+    };
     
+
+    Service.create(data)
+      .then(response => {
+        this.setState({
+            id: response.data.id,
+            
+            submitted: true
+          })
+        console.log(response.data);
+      })
+      .catch(e => {
+        console.log(e);
+      });
+  }
+
+    newReq() {
+      this.setState({
+          keyword: "",
+          id: null,
+
+          submitted: false
+      });
     }
 
-  })
-  
-  return (
-   <form onSubmit={(e) => {
-     e.preventDefault()
-
-
-    const send = BackEnd.post('/crawl', async (req, res) => {
-        const newKeyword = await keywords.create({
-          keyword: forma.values
-          })
-          res.json(newKeyword)
-      }) 
-
-      // const ans = BackEnd.get(`/crawl/${id}`, async (req, res) => {
-      //   const keywordId = req.params.id
-      //   const newKeywordId = await keywords.create({
-      //     id: keywordId
-      //   })
-      //   res.json({ newKeywordId })
-      // })
-  }}>
-
-     <div>
-       <input
-        type="text"
-        placeholder="Requisisao"
-        name="keyword"
-        id="keyword"
-        onChange={forma.handleChange}
-        value={forma.values.keyword}
-        />
-        <br/>	
-        {forma.errors.keyword && <span className="formaField_error">{forma.errors.keyword}</span>}
-      </div>
-      <button type="submit">
-        Cadastrar
-      </button>
-              <div onChange={forma.handleChange}>
-                <p>
-                    keyword: { forma.values.keyword }
-                </p>
-                <p>
-                    Status:
-                </p>
-                <p>
-                    Id:
-                </p>
-                
+  render() {
+    return (
+        <div>
+          <h4>Create Req</h4>
+            {this.state.submitted ? (
+            <div>
+                <h4>You submitted successfully!</h4>
+                <button onClick={this.newReq}>
+                    Add
+                </button>
+                <div>
+                  <p>keyword: { this.state.keyword }</p>
+                  <p>Id: { this.state.id }</p>
+                </div>
             </div>
-    </form>
-  )
-}
+            ):(
+            <div>
+              <div>
+              <label htmlFor="keyword">Keyword</label>
+              <br/>
+              <input
+                  type="text"
+                  className="form"
+                  required
+                  value={this.state.keyword}
+                  onChange={this.onChangeKeyword}
+                  name="keyword"
+              />
+              </div>
 
-export default App;
+
+              <button onClick={this.saveReq} >
+                  Submit
+              </button>
+            </div>
+          )}
+        </div>
+      );
+  }
+}

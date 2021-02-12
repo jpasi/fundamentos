@@ -1,96 +1,110 @@
-import React, { useState, useEffect } from 'react'
+import React, { Component } from "react";
+import Service from "../services/service";
 
 
-function RegForm({
-  initialValues,
-  validate
-}) {
-  const [errors, setErrors] = useState({})
-  const [values, setValues] = useState(initialValues)
+export default class CallReq extends Component {
+  constructor(props) {
+    super(props);
+    this.onChangeId = this.onChangeId.bind(this);
+    this.getReq = this.getReq.bind(this);
+    this.newSearch = this.newSearch.bind(this);
 
-  useEffect(() => {
-    validateValues(values)
-  }, [values])
 
-  function handleChange(e) {
-    const fieldName = e.target.getAttribute('name')
-    const value = e.target.value
-    setValues({
-      ...values,
-      [fieldName]: value,
+
+    this.state = {
+        id: "",
+        currentReq: {
+          id: "",
+          status: "",
+          urls: "" 
+        }
+    };
+  }
+
+
+  onChangeId(e) {
+    const id = e.target.value;
+  
+    this.setState({
+      id: id
     })
   }
 
-  function validateValues(values) {
-    setErrors(validate(values))
+
+
+
+  getReq() {
+    Service.get(this.state.id)
+      .then(response => {
+        this.setState({
+          id: "",
+          submitted: true,
+          currentReq: {
+            id: this.state.id,
+            status: response.data.status,
+            urls: response.data.urls.length
+          }
+        });
+        console.log(response.data);
+      })
+      .catch(e => {
+        console.log(e);
+      });
   }
 
-  return {
-    values,
-    errors,
-    setErrors,
-    handleChange
+  newSearch() {
+    this.setState({
+        id: "",
+
+        submitted: false
+    });
   }
-}
 
 
+  render() {
+    const { id } = this.state;
 
-function App() {
-  const forma = RegForm({
-    initialValues: {
-     req: ''
-    },
-
-    validate: function (values) {
-      const errors = {};
-
-      if(values.req.length < 1) {
-        errors.req = 'Por favor, escrever um Id'
-      }
-    
-      return errors
-    
-    }
-
-  })
-  
-  return (
-   <form onSubmit={(e) => {
-     e.preventDefault()
-    
-   }}>
-     <div>
-       <input
-        type="text"
-        placeholder="Id"
-        name="req"
-        id="req"
-        onChange={forma.handleChange}
-        value={forma.values.req}
-        />
-        <br/>	
-        {forma.errors.req && <span className="formaField_error">{forma.errors.req}</span>}
-      </div>
-      <button type="submit">
-        Cadastrar
-      </button>
-              <div onChange={forma.handleChange}>
-                <p>
-                    Id: { forma.values.req }
-                </p>
-                <p>
-                    Req Status:
-                </p>
-                <p>
-                    Status:
-                </p>
-                <p>
-                    URLs:
-                </p>
-                
+    return (
+      <div>
+        <div>
+          <h4>Search Req</h4>
+          {this.state.submitted ? (
+            <div>
+                <h4>You submitted successfully!</h4>
+                <button onClick={this.newSearch}>
+                    New Search
+                </button>
+                <div>
+                  <p>Id: { this.state.currentReq.id }</p>
+                  <p>Status: { this.state.currentReq.status }</p>
+                  <p>Urls qty: { this.state.currentReq.urls }</p>
+                </div>
             </div>
-    </form>
-  )
-}
+            ):(
+              <div>
+                <div>
+                  <label htmlFor="id">Id</label>
+                  <br/>
+                  <input
+                    type="text"
+                    id="id"
+                    value={ id }
+                    onChange={this.onChangeId}
+                  />
+                </div>
 
-export default App;
+                <div >
+                  <button
+                    type="button"
+                    onClick={this.getReq}
+                  >
+                    Search
+                  </button>
+                </div>
+              </div>
+            )}
+        </div>
+      </div>
+    )
+  }
+}

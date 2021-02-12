@@ -4,7 +4,7 @@ import Card from "./card/Card";
 import RegForma from './components/RegForma'
 import RegedForma from './components/RegedForma'
 
-import BackEnd from './BackEnd'
+
 
 class App extends Component {
 
@@ -18,6 +18,7 @@ class App extends Component {
             <RegForma></RegForma>
           </Card>
         </div>
+
 
         <div>
           <Card titulo="Cadastrados">
